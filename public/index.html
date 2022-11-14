@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+  <style>
+    .wrapper {
+      display: grid;
+      grid-auto-columns: 1fr;
+    }
+    header {
+      background-image: url("pixels.png");
+      background-size: cover;
+    }
+  </style>
+
+  <title>AnyPixel</title>
+</head>
+
+<body class="bg-info bg-opacity-25">
+
+<!-- web page cover -->
+  <div class="bg-info position-absolute" id="cover" 
+    style="height:100vh;width:100vw;z-index: 7;
+      transform: translateY(-00vh);
+      transition: transform 2s cubic-bezier(0, 0.4, 0.35, 1);"
+    >
+    <h1 class="mt-5 pt-5 fs-1 position-absolute start-50 translate-middle">ANY PIXEL</h1>
+    <div class="col-8 col-lg-4 bg-white rounded position-absolute start-50 translate-middle" style="margin-top:70vh;">
+      <button id="connect" class="btn btn-primary mt-2 col-4 position-relative start-50 translate-middle-x">
+        connect</button>
+      <div class="m-0 pt-1 position-relative start-50 translate-middle-x text-center">
+        <span class="bg-dark bg-opacity-25 rounded-pill px-2 text-color" id="coverNotification">⚠️ Please connet to alfajores.</span>
+      </div>
+    </div>
+  </div>
+<!-- web page cover -->
+
+<!-- web content -->
+  <div class="container border bg-light overflow-scroll" style="height: 100vh;max-width: 72em">
+
+    <header class="row pt-5" >    
+      <div class="container pt-5 mb-2 d-flex justify-content-between align-items-center">
+        <h1 class="fw-bold">AnyPixel</h1>
+        <p class="px-2 border border-danger rounded-pill fs-5 " >
+          <span id="balance">0</span>
+          cUSD
+        </p>
+      </div>
+    </header>
+
+
+    <nav class="navbar navbar-expand-lg row bg-white">
+      <div class="container-fluid">
+        <div>
+          <button id="myCanvasButton" class="btn btn-dark rounded-pill">MyPixels</button>
+          <button id="createButton" class="btn btn-dark rounded-pill" data-bs-toggle="modal" data-bs-target="#addModal">Create</button>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#seacrchContent" aria-controls="SeacrchContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="seacrchContent" >
+          <ul class="navbar-nav ms-auto align-items-end" >
+            <li>
+              <label class="nav-item m-2">
+                Owner: <input id="owner" type="search" placeholder="Owner Address" aria-label="Search">
+              </label>
+            </li>
+            <li>
+              <label class="nav-item m-2">
+                Artist: <input id="artist" type="search" placeholder="Artist Address" aria-label="Search">
+              </label>
+            </li> 
+            <li>
+              <button class="btn btn-outline-success  m-2 p-1" id="search">Search</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class=" bg-warning mt-2">
+      <span id="mainNotification"></span>
+    </div>
+    <main id="gallery" class="row bg-light pt-2">
+
+    </main>
+  </div>
+<!-- web content -->
+
+
+
+  <!-- Modal -->
+  <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="newCanvasModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="newProductModalLabel">New Canvas</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="col bg-secondary bg-opacity-25 rounded-pill text-center mb-2">
+            <i class="bi bi-lightbulb"></i>
+            choose a color, click to create your art!
+          </div>
+          
+          <label class="me-3 float-end mb-2">Choose your color: <input id="colorSelector" type="color" value="#B0B0F0"></label>
+
+          <div class="col-10 wrapper border mb-2 mx-auto"></div>
+
+          <div class="col">
+            <input type="text" id="newCanvasName" class="form-control mb-2" placeholder="Enter name of canvas" />
+          </div>
+          <div class="col">
+            <input type="text" id="newCanvasDescription" class="form-control mb-2"
+              placeholder="Enter canvas description" />
+          </div>
+          <div class="col">
+            <input type="number" id="newCanvasPrice" class="form-control mb-2" placeholder="Enter price" />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
+            Close
+          </button>
+          <button type="button" class="btn btn-dark" data-bs-dismiss="modal" id="newCanvasButton">
+            Create
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <!--/Modal-->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/ethereum-blockies@0.1.1/blockies.min.js"></script>
+
+  <!-- <script src="../src/main.js"></script> -->
+
+</body>
+
+</html>
