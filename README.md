@@ -1,9 +1,9 @@
 # ANYPIXELS
-This is a Dapp where anyone is able to create and trade his own pixel 8*8 art.
-you can:
-    create any pixel art
-    Set a fair price and earn cUSD. ————sure, you can change the price at any time
-    buy any pixel art you want. ————You pay a portion to the artist(10% default), remain to the owner
+This is a Dapp where anyone is able to create and trade his own pixel 8*8 art.  
+you can:  
+    create any pixel art  
+    Set a fair price and earn cUSD. ————sure, you can change the price at any time  
+    buy any pixel art you want. ————You pay a portion to the artist(10% default), remain to the owner  
 
 # Demo
 [AnyPixels](#)
