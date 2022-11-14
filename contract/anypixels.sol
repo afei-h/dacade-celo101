@@ -76,8 +76,10 @@ contract Anypixels {
 
     /// @notice set a new price
     function setPrice(uint256 _index, uint256 _price) public reasonablePrice(_price) {
-        require (msg.sender == canvases[_index].owner, "Only holder can change price!");
-        canvases[_index].price = _price;
+        Canvas storage currentCanvas = canvases[_index]; 
+        require (msg.sender == currentCanvas.owner, "Only holder can change price!");
+        currentCanvas.price = _price;
+        currentCanvas.onSale = true;
     }
 
     /// @notice return the canvas correspond to index
@@ -110,7 +112,7 @@ contract Anypixels {
     function buyCanvas(uint256 _index) public {
         Canvas storage currentCanvas = canvases[_index]; 
         require(currentCanvas.owner != msg.sender, "You can't buy canvases you own");
-
+        require(currentCanvas.onSale, "Canvas isn't on sale");
         uint256 royaltyFee = (currentCanvas.price * royalty) / 100;
         require(
             IERC20Token(cUsdTokenAddress).transferFrom(
@@ -125,6 +127,7 @@ contract Anypixels {
             ),
           "Transfer failed."
         );
+        currentCanvas.onSale = false;
         currentCanvas.owner = msg.sender;
     }
 
