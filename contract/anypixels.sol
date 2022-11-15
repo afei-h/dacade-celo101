@@ -20,11 +20,13 @@ interface IERC20Token {
  * @notice a contract anyone can create and trade their pixel arts
  */
 contract Anypixels {
-    // @notice a data structure to store a 8x8 pixel image
-    // @dev store pixels in bytes32 is cheaper than number array
-    // @param owner of the image
-    // @param pixels store every pixel's color value, 6 rows correspond to R G B R G B;
-    // @param artist who drawn this image
+
+    /// @notice a data structure to store a 8x8 pixel image
+    /// @dev store pixels in bytes32 is cheaper than number array
+    /// @param owner of the image
+    /// @param pixels store every pixel's color value, 6 rows correspond to R G B R G B;
+    /// @param artist who drawn this image
+    /// @dev (price == 0) means not for sale
     struct Canvas {
         string name;
         address owner;
@@ -32,7 +34,6 @@ contract Anypixels {
         address artist;
         string description;
         uint256 price;
-        bool onSale;
     }
 
     //owner of the address 
@@ -58,28 +59,28 @@ contract Anypixels {
         _;
     }
 
-    modifier reasonablePrice(uint _price){
-        require(_price >= 100);
-        _;
-    }
-
     /// @notice create a new canvas
     /// @param _name name of the new canvas
     /// @param _pixels an array of every pixel color value
     /// @param _description a short description about the art
     /// @param _price price of the new canvas
-    function createCanvas(string calldata _name, bytes32[6] calldata _pixels, string calldata _description ,uint256 _price) public reasonablePrice(_price) {
+    function createCanvas(string calldata _name, bytes32[6] calldata _pixels, string calldata _description ,uint256 _price) public {
         require(bytes(_name).length > 0, "Empty name");
-        require(bytes(_description).length > 0, "Empty description");
-        canvases.push(Canvas(_name, msg.sender, _pixels, msg.sender, _description, _price, true));
+        canvases.push(Canvas(
+            _name,
+            msg.sender, 
+            _pixels, 
+            msg.sender,
+            bytes(_description).length > 0 ? _description : "...",
+            _price));
     }
 
     /// @notice set a new price
-    function setPrice(uint256 _index, uint256 _price) public reasonablePrice(_price) {
-        Canvas storage currentCanvas = canvases[_index]; 
+    function setPrice(uint256 _index, uint256 _price) public {
+        Canvas storage currentCanvas = canvases[_index];
         require (msg.sender == currentCanvas.owner, "Only holder can change price!");
+        require(_price > 0, "Please enter a price!");
         currentCanvas.price = _price;
-        currentCanvas.onSale = true;
     }
 
     /// @notice return the canvas correspond to index
@@ -112,7 +113,7 @@ contract Anypixels {
     function buyCanvas(uint256 _index) public {
         Canvas storage currentCanvas = canvases[_index]; 
         require(currentCanvas.owner != msg.sender, "You can't buy canvases you own");
-        require(currentCanvas.onSale, "Canvas isn't on sale");
+        require(currentCanvas.price > 0, "Canvas isn't on sale");
         uint256 royaltyFee = (currentCanvas.price * royalty) / 100;
         require(
             IERC20Token(cUsdTokenAddress).transferFrom(
@@ -127,7 +128,7 @@ contract Anypixels {
             ),
           "Transfer failed."
         );
-        currentCanvas.onSale = false;
+        currentCanvas.price = 0;
         currentCanvas.owner = msg.sender;
     }
 

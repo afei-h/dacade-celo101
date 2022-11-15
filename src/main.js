@@ -5,7 +5,7 @@ import anypixelsAbi from '../contract/anypixels.abi.json';
 import erc20Abi from "../contract/erc20.abi.json";
 
 const ERC20_DECIMALS = 18;
-const APContractAddress = "0x330252A4d2A156211De5d298A929E24Aea4C2409";
+const APContractAddress = "0x069220597AF1339DAE19d6b56a5926F18B602d26";
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
 let kit;
@@ -88,7 +88,6 @@ async function getCanvases() {
     renderCanvases(canvases);
 }
 
-
 function renderCanvases(_canvases) {
     document.querySelector('#gallery').innerHTML = "";
     _canvases.forEach((_canvas) => {
@@ -99,12 +98,13 @@ function renderCanvases(_canvases) {
     })
 }
 
+//card will show differently to canvas's owner and client (owner can change price but can't buy)
 function canvasTemplate(_canvas) {
     return `
         <div class="card mb-4">
             <img class="card-img-top" src="${createImageURL(_canvas.pixels)}" alt="..." class="card-img">
             <div class="position-absolute top-0 start-0 bg-warning mt-4 py-1 rounded-end">
-                ${_canvas.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
+                ${_canvas.price.comparedTo(0) ? `${_canvas.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD` : "Not For Sale"}
             </div>
 
             <div class="card-body text-left p-4 position-relative">
@@ -128,7 +128,7 @@ function canvasTemplate(_canvas) {
                             Set Price
                         </a>`
                         :
-                        `<a class="btn btn-lg btn-outline-dark buyBtn fs-6 p-3" id=${_canvas.index}>
+                        `<a class="btn btn-lg btn-outline-dark buyBtn fs-6 p-3 ${_canvas.price.comparedTo(0) ? "" : "disabled"}" id=${_canvas.index}>
                             Buy
                         </a>`
                     }
@@ -169,16 +169,22 @@ async function createNewCancas() {
         .shiftedBy(ERC20_DECIMALS)
         .toString()
     ];
-    mainNotification(`⌛ Adding "${params[0]}"...`);
-    try {
-        const result = await contract.methods
-          .createCanvas(...params)
-          .send({ from: kit.defaultAccount });
-        mainNotification(`🎉 You successfully added "${params[0]}".`);
-      } catch (error) {
-        mainNotification(`⚠️ ${error}.`);
-      }
-    getCanvases();
+    if (params[0] === "")
+    {
+      mainNotification(`⚠️ Error: empty name!`);
+    }
+    else{
+      mainNotification(`⌛ Adding "${params[0]}"...`);
+      try {
+          const result = await contract.methods
+            .createCanvas(...params)
+            .send({ from: kit.defaultAccount });
+          mainNotification(`🎉 You successfully added "${params[0]}".`);
+        } catch (error) {
+          mainNotification(`⚠️ ${error}.`);
+        }
+      getCanvases();
+    }
 }
 
 function getPixelData(){
@@ -211,20 +217,16 @@ async function contractHandler(event) {
       mainNotification("⌛ Waiting for payment approval...");
       try {
         await approve(canvases[index].price);
-      } catch (error) {
-        mainNotification(`⚠️ ${error}.`);
-      }
-      mainNotification(`⌛ Awaiting payment for "${canvases[index].name}"...`);
-      try {
+        mainNotification(`⌛ Awaiting payment for "${canvases[index].name}"...`);
         const result = await contract.methods
           .buyCanvas(index)
           .send({ from: kit.defaultAccount });
         mainNotification(`🎉 You successfully bought "${canvases[index].name}".`);
-        getCanvases();
-        getBalance();
       } catch (error) {
         mainNotification(`⚠️ ${error}.`);
       }
+        getCanvases();
+        getBalance();
     }
     else if(event.target.className.includes("priceBtn")){
       const index = event.target.id;
@@ -236,7 +238,6 @@ async function contractHandler(event) {
           .send({ from: kit.defaultAccount });
         mainNotification(`🎉 You successfully set "${canvases[index].name}" to ${price} cUSD.`);
         getCanvases();
-        getBalance();
       } catch (error) {
         mainNotification(`⚠️ ${error}.`);
       }
