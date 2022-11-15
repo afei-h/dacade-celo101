@@ -17,7 +17,7 @@ interface IERC20Token {
 
 /**
  * @title Anypixels
- * @notice a contract anyone can creat and trade his own pixel art on it
+ * @notice a contract anyone can create and trade their pixel arts
  */
 contract Anypixels {
     // @notice a data structure to store a 8x8 pixel image
@@ -32,6 +32,7 @@ contract Anypixels {
         address artist;
         string description;
         uint256 price;
+        bool onSale;
     }
 
     //owner of the address 
@@ -57,22 +58,31 @@ contract Anypixels {
         _;
     }
 
-    // @notice create a new canvas
-    // @param _name name of the new canvas
-    // @param _pixels an array of every pixel color value
-    // @param _description a short description about the art
-    // @param _price price of the new canvas
-    function createCanvas(string memory _name, bytes32[6] memory _pixels, string memory _description ,uint256 _price) public {
-        canvases.push(Canvas(_name, msg.sender, _pixels, msg.sender, _description, _price));
+    modifier reasonablePrice(uint _price){
+        require(_price >= 100);
+        _;
     }
 
-    // @notice set a new price
-    function setPrice(uint256 _index, uint256 _price) public {
-        require (msg.sender == canvases[_index].owner, "Only holder can change price!");
-        canvases[_index].price = _price;
+    /// @notice create a new canvas
+    /// @param _name name of the new canvas
+    /// @param _pixels an array of every pixel color value
+    /// @param _description a short description about the art
+    /// @param _price price of the new canvas
+    function createCanvas(string calldata _name, bytes32[6] calldata _pixels, string calldata _description ,uint256 _price) public reasonablePrice(_price) {
+        require(bytes(_name).length > 0, "Empty name");
+        require(bytes(_description).length > 0, "Empty description");
+        canvases.push(Canvas(_name, msg.sender, _pixels, msg.sender, _description, _price, true));
     }
 
-    // @notice return the canvas correspond to index
+    /// @notice set a new price
+    function setPrice(uint256 _index, uint256 _price) public reasonablePrice(_price) {
+        Canvas storage currentCanvas = canvases[_index]; 
+        require (msg.sender == currentCanvas.owner, "Only holder can change price!");
+        currentCanvas.price = _price;
+        currentCanvas.onSale = true;
+    }
+
+    /// @notice return the canvas correspond to index
     function readCanvas(uint256 _index) public view returns (
         string memory,
         address, 
@@ -81,42 +91,47 @@ contract Anypixels {
         string memory,
         uint256
     ){
+        Canvas storage currentCanvas = canvases[_index];
         return (
-            canvases[_index].name, 
-            canvases[_index].owner, 
-            canvases[_index].pixels, 
-            canvases[_index].artist, 
-            canvases[_index].description,
-            canvases[_index].price
+            currentCanvas.name, 
+            currentCanvas.owner, 
+            currentCanvas.pixels, 
+            currentCanvas.artist, 
+            currentCanvas.description,
+            currentCanvas.price
         );
     }
 
-    //@ notice returns the amount of meals in the contract
+    /// @notice returns the amount of meals in the contract
     function getCanvasLength() public view returns(uint256) {
         return canvases.length;
     }
 
-    // @notice buy a canvas correspond to index
-    // @dev a portion of the price is transfered to artist, remain to owner.
+    /// @notice buy a canvas corresponding to the index
+    /// @dev a portion of the price is transferred to artist as royalty and the rest is transferred to owner.
     function buyCanvas(uint256 _index) public {
-        uint256 royaltyFee = canvases[_index].price * royalty / 100;
+        Canvas storage currentCanvas = canvases[_index]; 
+        require(currentCanvas.owner != msg.sender, "You can't buy canvases you own");
+        require(currentCanvas.onSale, "Canvas isn't on sale");
+        uint256 royaltyFee = (currentCanvas.price * royalty) / 100;
         require(
             IERC20Token(cUsdTokenAddress).transferFrom(
                 msg.sender,
-                canvases[_index].artist,
+                currentCanvas.artist,
                 royaltyFee
             )&&
             IERC20Token(cUsdTokenAddress).transferFrom(
                 msg.sender,
-                canvases[_index].owner,
-                canvases[_index].price - royaltyFee
+                currentCanvas.owner,
+                currentCanvas.price - royaltyFee
             ),
           "Transfer failed."
         );
-        canvases[_index].owner = msg.sender;
+        currentCanvas.onSale = false;
+        currentCanvas.owner = msg.sender;
     }
 
-    // @notice set a new royalty, only owner
+    /// @notice set a new royalty, only owner
     function setRoyalty(uint256 _royalty) public reasonableRoyalty(_royalty) {
         require(msg.sender == owner, "Only contract owner can modify royalty");
         royalty = _royalty;
