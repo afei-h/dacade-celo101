@@ -49,10 +49,10 @@ contract Anypixels {
     }
 
     //owner of the address
-    address public owner;
+    address internal owner;
 
     //royalty a portion(royalty%) of the price will be transfered to artist of the canvas
-    uint256 public royalty;
+    uint256 private royalty;
 
     //store all the pixel arts
     Canvas[] internal canvases;
@@ -171,11 +171,18 @@ contract Anypixels {
     function sellCanvas(uint256 _index) public {
         Canvas storage currentCanvas = canvases[_index];
         require(
-            currentCanvas.owner == msg.sender || 
-            currentCanvas.sold == true,
+            currentCanvas.owner == msg.sender || currentCanvas.sold == true,
             "Only the owner can sell canvases"
         );
         currentCanvas.sold = false;
+    }
+
+    function deleteCanvas(uint _index) public {
+        require(
+            canvases[_index].owner == msg.sender || msg.sender == owner,
+            "Only the owner can sell canvases"
+        );
+        delete canvases[_index];
     }
 
     /// @notice set a new royalty, only owner
