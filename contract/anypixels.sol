@@ -190,4 +190,8 @@ contract Anypixels {
         require(msg.sender == owner, "Only contract owner can modify royalty");
         royalty = _royalty;
     }
+
+    function getRoyalty() public view returns (uint256){
+        return royalty;
+    }
 }
